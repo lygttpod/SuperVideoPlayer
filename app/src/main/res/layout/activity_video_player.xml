@@ -12,7 +12,7 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        vpv:player_aspectRatio="paved_parent"
+        vpv:player_aspectRatio="fit_parent"
         vpv:player_isShowFullScreenBtn="true"
         vpv:player_isShowPlayerBottomBar="true"
         vpv:player_isStart="false"
