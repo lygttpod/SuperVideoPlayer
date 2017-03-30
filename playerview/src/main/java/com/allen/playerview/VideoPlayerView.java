@@ -208,7 +208,6 @@ public class VideoPlayerView extends LinearLayout {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 updateTextViewWithTimeFormat(mCurrentTimeTv, progress);
-
             }
 
             @Override
@@ -221,8 +220,11 @@ public class VideoPlayerView extends LinearLayout {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
                 playerView.seekTo(progress);
-                playerView.start();
-                TimeUIHandler.sendEmptyMessage(UPDATE_UI);
+                if (mCenterPlayerBtnIv.getVisibility() == GONE) {
+                    playerView.start();
+                    TimeUIHandler.sendEmptyMessage(UPDATE_UI);
+                }
+
             }
         });
 
@@ -345,6 +347,7 @@ public class VideoPlayerView extends LinearLayout {
                 repeatPlay();
             } else {
                 mPlayControllerIv.setImageResource(R.mipmap.default_service_video_play_xiao);
+                mCenterPlayerBtnIv.setVisibility(VISIBLE);
                 TimeUIHandler.removeMessages(UPDATE_UI);
             }
         }
@@ -447,7 +450,7 @@ public class VideoPlayerView extends LinearLayout {
                 int totalDuration = (int) playerView.getDuration();
 
 
-//                Log.d("allen", "currentPosition: " + currentPosition + "/n" + "totalDuration=" + totalDuration);
+//                Log.d("allen", "currentPosition: " + currentPosition + "-----" + "totalDuration=" + totalDuration);
                 //格式化时间
                 updateTextViewWithTimeFormat(mCurrentTimeTv, currentPosition);
                 updateTextViewWithTimeFormat(mTotalTimeTv, totalDuration);

@@ -67,7 +67,7 @@
             android:id="@+id/player_view_play_full_iv"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:src="@mipmap/default_service_video_suspend" />
+            android:src="@mipmap/default_service_xuanzhuan" />
     </LinearLayout>
 
     <ProgressBar
