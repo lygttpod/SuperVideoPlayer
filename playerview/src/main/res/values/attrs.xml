@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="VideoPlayerView">
+        <attr name="player_videoPath" format="string"/>
+        <attr name="player_isStart" format="boolean"/>
+        <attr name="player_repeatPlay" format="boolean"/>
+        <attr name="player_isShowPlayerBottomBar" format="boolean"/>
+        <attr name="player_isShowLoadingView" format="boolean"/>
+        <attr name="player_isShowFullScreenBtn" format="boolean"/>
+
+        <attr name="player_coverViewDrawableId" format="reference"/>
+        <attr name="player_aspectRatio" format="enum">
+            <enum name="origin" value="0" />
+            <enum name="fit_parent" value="1" />
+            <enum name="paved_parent" value="2" />
+            <enum name="is_16_9" value="3" />
+            <enum name="is_4_3" value="4" />
+        </attr>
+
+    </declare-styleable>
+</resources>

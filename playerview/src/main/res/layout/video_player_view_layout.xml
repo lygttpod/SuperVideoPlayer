@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.pili.pldroid.player.widget.PLVideoTextureView
+        android:id="@+id/VideoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <LinearLayout
+        android:id="@+id/player_view_bottom_bar_layout_ll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@color/playerView_bottom_bg_transparent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+
+        <ImageView
+            android:id="@+id/player_view_play_controller_iv"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@mipmap/default_service_video_suspend" />
+
+        <TextView
+            android:id="@+id/player_view_current_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dip"
+            android:layout_marginRight="7dp"
+            android:text="00:00"
+            android:textColor="#ffffff"
+            android:textSize="10sp" />
+
+
+        <SeekBar
+            android:id="@+id/player_view_current_seekBar_sb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxHeight="2dip"
+            android:minHeight="2dip"
+            android:progress="1"
+            android:progressDrawable="@drawable/default_seekbar"
+            android:thumb="@drawable/default_seekbar_thumb" />
+
+
+        <TextView
+            android:id="@+id/player_view_total_time_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="7dp"
+            android:layout_marginRight="12dp"
+            android:text="总时间"
+            android:textColor="#ffffff"
+            android:textSize="10sp" />
+
+        <ImageView
+            android:id="@+id/player_view_play_full_iv"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@mipmap/default_service_video_suspend" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/player_view_loading_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/player_view_center_play_iv"
+        android:layout_width="74dp"
+        android:layout_height="74dp"
+        android:layout_gravity="center"
+        android:src="@mipmap/default_play_img"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/player_view_cover_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+</FrameLayout>
+
