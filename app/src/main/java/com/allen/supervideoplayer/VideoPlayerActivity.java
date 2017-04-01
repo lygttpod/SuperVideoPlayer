@@ -12,7 +12,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private VideoPlayerView playerView;
 
-    private String videoUrl = "https://ztest3-pic.jikeyue.com/mapi/i/video_exp/micky.mp4?gv=4_1";
+    private String videoUrl = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
 
     private boolean isPlayLocalVideo = false;
 
@@ -20,8 +20,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        /*set it to be full screen*/
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-       /*set it to be full screen*/
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); // 防止锁屏

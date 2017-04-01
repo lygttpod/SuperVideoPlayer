@@ -74,6 +74,7 @@ public class VideoPlayerView extends LinearLayout {
      */
     private int aspectRatio;
 
+
     private LinearLayout mPlayerBottomBarLayout;
     private ImageView mCoverView;
     private ProgressBar mLoadingView;
@@ -86,6 +87,12 @@ public class VideoPlayerView extends LinearLayout {
     private SeekBar mSeekBar;
 
     private static final int UPDATE_UI = 1;
+
+    public static final int ORIGIN = 0;
+    public static final int FIT_PARENT = 1;
+    public static final int PAVED_PARENT = 2;
+    public static final int IS_16_9 = 3;
+    public static final int FIS_4_3 = 4;
 
 
     public VideoPlayerView(Context context) {
@@ -116,6 +123,8 @@ public class VideoPlayerView extends LinearLayout {
         isShowFullScreenBtn = typedArray.getBoolean(R.styleable.VideoPlayerView_player_isShowFullScreenBtn, false);
         coverViewDrawable = typedArray.getDrawable(R.styleable.VideoPlayerView_player_coverViewDrawableId);
         aspectRatio = typedArray.getInt(R.styleable.VideoPlayerView_player_aspectRatio, 1);
+
+        typedArray.recycle();
     }
 
 
@@ -242,7 +251,7 @@ public class VideoPlayerView extends LinearLayout {
             e.printStackTrace();
         }
 
-        setOptions(AVOptions.MEDIA_CODEC_HW_DECODE);
+        setOptions();
         playerView.setOnErrorListener(mOnErrorListener);
         playerView.setOnCompletionListener(mOnCompletionListener);
         playerView.setOnPreparedListener(new PLMediaPlayer.OnPreparedListener() {
@@ -253,7 +262,7 @@ public class VideoPlayerView extends LinearLayout {
                 }
             }
         });
-        initCoverView();
+        setCoverView(coverViewDrawable);
 
         //是否显示加载时候的loading框
         if (isShowLoadingView) {
@@ -261,9 +270,6 @@ public class VideoPlayerView extends LinearLayout {
             playerView.setBufferingIndicator(mLoadingView);
         }
 
-        if (coverViewDrawable != null) {
-            playerView.setCoverView(mCoverView);
-        }
 
         //设置显示比例   16：9   4：3 等等
         playerView.setDisplayAspectRatio(aspectRatio);
@@ -286,10 +292,12 @@ public class VideoPlayerView extends LinearLayout {
     /**
      * 初始化播放封面
      */
-    private void initCoverView() {
-        if (coverViewDrawable != null) {
-            mCoverView.setImageDrawable(coverViewDrawable);
+    private VideoPlayerView setCoverView(Drawable drawable) {
+        if (drawable != null) {
+            mCoverView.setImageDrawable(drawable);
+            playerView.setCoverView(mCoverView);
         }
+        return this;
     }
 
     /**
@@ -317,10 +325,8 @@ public class VideoPlayerView extends LinearLayout {
 
     /**
      * 配置视频播放器器的参数
-     *
-     * @param codecType
      */
-    private void setOptions(int codecType) {
+    private void setOptions() {
         AVOptions options = new AVOptions();
 
         // the unit of timeout is ms
@@ -329,10 +335,10 @@ public class VideoPlayerView extends LinearLayout {
         options.setInteger(AVOptions.KEY_PROBESIZE, 128 * 1024);
 
         // 1 -> hw codec enable, 0 -> disable [recommended]
-        options.setInteger(AVOptions.KEY_MEDIACODEC, AVOptions.MEDIA_CODEC_SW_DECODE);
+        options.setInteger(AVOptions.KEY_MEDIACODEC, AVOptions.MEDIA_CODEC_AUTO);
 
         // whether start play automatically after prepared, default value is 1
-        options.setInteger(AVOptions.KEY_START_ON_PREPARED, codecType);
+        options.setInteger(AVOptions.KEY_START_ON_PREPARED, 0);
 
         playerView.setAVOptions(options);
     }
@@ -359,7 +365,6 @@ public class VideoPlayerView extends LinearLayout {
     private PLMediaPlayer.OnErrorListener mOnErrorListener = new PLMediaPlayer.OnErrorListener() {
         @Override
         public boolean onError(PLMediaPlayer mp, int errorCode) {
-            boolean isNeedReconnect = false;
             switch (errorCode) {
                 case PLMediaPlayer.ERROR_CODE_INVALID_URI:
                     showToastTips("无效的 URL!");
@@ -372,33 +377,27 @@ public class VideoPlayerView extends LinearLayout {
                     break;
                 case PLMediaPlayer.ERROR_CODE_CONNECTION_TIMEOUT:
                     showToastTips("连接超时!");
-                    isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_EMPTY_PLAYLIST:
                     showToastTips("空的播放列表!");
                     break;
                 case PLMediaPlayer.ERROR_CODE_STREAM_DISCONNECTED:
                     showToastTips("与服务器连接断开!");
-                    isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_IO_ERROR:
                     showToastTips("网络异常!");
-                    isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_UNAUTHORIZED:
                     showToastTips("未授权，播放一个禁播的流!");
                     break;
                 case PLMediaPlayer.ERROR_CODE_PREPARE_TIMEOUT:
                     showToastTips("播放器准备超时!");
-                    isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_READ_FRAME_TIMEOUT:
                     showToastTips("读取数据超时!");
-                    isNeedReconnect = true;
                     break;
                 case PLMediaPlayer.ERROR_CODE_HW_DECODE_FAILURE:
-                    setOptions(AVOptions.MEDIA_CODEC_SW_DECODE);
-                    isNeedReconnect = true;
+                    showToastTips("硬解失败!");
                     break;
                 case PLMediaPlayer.MEDIA_ERROR_UNKNOWN:
                     break;
@@ -449,9 +448,8 @@ public class VideoPlayerView extends LinearLayout {
                 int currentPosition = (int) playerView.getCurrentPosition();
                 int totalDuration = (int) playerView.getDuration();
 
-
 //                Log.d("allen", "currentPosition: " + currentPosition + "-----" + "totalDuration=" + totalDuration);
-                //格式化时间
+                //格式化时间SocketService
                 updateTextViewWithTimeFormat(mCurrentTimeTv, currentPosition);
                 updateTextViewWithTimeFormat(mTotalTimeTv, totalDuration);
 
@@ -596,6 +594,68 @@ public class VideoPlayerView extends LinearLayout {
     }
 
     /**
+     * 设置是否显示底部控制布局
+     *
+     * @param isShowPlayerBottomBar
+     * @return
+     */
+    public VideoPlayerView isShowPlayerBottomBar(boolean isShowPlayerBottomBar) {
+
+        this.isShowPlayerBottomBar = isShowPlayerBottomBar;
+
+        if (isShowPlayerBottomBar) {
+            mPlayerBottomBarLayout.setVisibility(VISIBLE);
+        } else {
+            mPlayerBottomBarLayout.setVisibility(GONE);
+        }
+
+        return this;
+    }
+
+    /**
+     * 设置是否显示横屏按钮
+     *
+     * @param isShowFullScreenBtn
+     * @return
+     */
+    public VideoPlayerView isShowFullScreenBtn(boolean isShowFullScreenBtn) {
+
+        if (isShowFullScreenBtn) {
+            mFullScreenBtnIv.setVisibility(VISIBLE);
+        } else {
+            mFullScreenBtnIv.setVisibility(GONE);
+        }
+        return this;
+    }
+
+    /**
+     * 设置视频显示比例
+     *
+     * @param screenRatio
+     * @return
+     */
+    public VideoPlayerView setScreenRatio(int screenRatio) {
+        playerView.setDisplayAspectRatio(screenRatio);
+        return this;
+    }
+
+    /**
+     * 是否显示播放loading
+     *
+     * @param isShowLoadingView
+     * @return
+     */
+    public VideoPlayerView isShowLoadingView(boolean isShowLoadingView) {
+        if (isShowLoadingView) {
+            mLoadingView.setVisibility(VISIBLE);
+        } else {
+            mLoadingView.setVisibility(GONE);
+        }
+        return this;
+    }
+
+
+    /**
      * 设置音量大小
      *
      * @param sound 0.0---1.0
@@ -613,6 +673,26 @@ public class VideoPlayerView extends LinearLayout {
      */
     public boolean isPlaying() {
         return playerView.isPlaying();
+    }
+
+    /**
+     * 获取当前播放进度百分比
+     *
+     * @return currentProgress
+     */
+    public int getCurrentProgress() {
+
+        int mCurrentProgress = 0;
+
+        //获取当前播放进度和总时间
+        double currentPosition = (double) playerView.getCurrentPosition();
+        double totalDuration = (double) playerView.getDuration();
+
+        if (totalDuration != -1) {
+            mCurrentProgress = (int) (currentPosition / (totalDuration) * 100);
+        }
+
+        return mCurrentProgress;
     }
 
     /**
