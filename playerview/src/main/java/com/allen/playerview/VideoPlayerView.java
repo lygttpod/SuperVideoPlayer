@@ -12,6 +12,7 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -66,6 +67,11 @@ public class VideoPlayerView extends LinearLayout {
      */
     private boolean isShowFullScreenBtn = false;
     /**
+     * 是否允许点击屏幕暂停播放
+     */
+    private boolean isTouchForPause = true;
+
+    /**
      * 封面图片
      */
     private Drawable coverViewDrawable = null;
@@ -85,6 +91,8 @@ public class VideoPlayerView extends LinearLayout {
 
     private TextView mCurrentTimeTv, mTotalTimeTv;
     private SeekBar mSeekBar;
+
+    private FrameLayout mTouchForPauseView;
 
     private static final int UPDATE_UI = 1;
 
@@ -121,6 +129,7 @@ public class VideoPlayerView extends LinearLayout {
         isShowPlayerBottomBar = typedArray.getBoolean(R.styleable.VideoPlayerView_player_isShowPlayerBottomBar, false);
         isShowLoadingView = typedArray.getBoolean(R.styleable.VideoPlayerView_player_isShowLoadingView, true);
         isShowFullScreenBtn = typedArray.getBoolean(R.styleable.VideoPlayerView_player_isShowFullScreenBtn, false);
+        isTouchForPause = typedArray.getBoolean(R.styleable.VideoPlayerView_player_isTouchForPause, true);
         coverViewDrawable = typedArray.getDrawable(R.styleable.VideoPlayerView_player_coverViewDrawableId);
         aspectRatio = typedArray.getInt(R.styleable.VideoPlayerView_player_aspectRatio, 1);
 
@@ -140,6 +149,7 @@ public class VideoPlayerView extends LinearLayout {
         mCoverView = (ImageView) findViewById(R.id.player_view_cover_view);
         mLoadingView = (ProgressBar) findViewById(R.id.player_view_loading_view);
 
+        mTouchForPauseView = (FrameLayout) findViewById(R.id.touch_for_pause_view);
         mPlayControllerIv = (ImageView) findViewById(R.id.player_view_play_controller_iv);
         mCurrentTimeTv = (TextView) findViewById(R.id.player_view_current_time_tv);
         mTotalTimeTv = (TextView) findViewById(R.id.player_view_total_time_tv);
@@ -156,36 +166,25 @@ public class VideoPlayerView extends LinearLayout {
      * 设置按钮事件
      */
     private void setClickListenerEvent() {
+        mTouchForPauseView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isTouchForPause) {
+                    playController();
+                }
+            }
+        });
         mPlayControllerIv.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (playerView != null) {
-                    if (playerView.isPlaying()) {
-                        mPlayControllerIv.setImageResource(R.mipmap.default_service_video_play_xiao);
-                        playerView.pause();
-                        TimeUIHandler.removeMessages(UPDATE_UI);
-
-                        mCenterPlayerBtnIv.setVisibility(VISIBLE);
-                    } else {
-                        mPlayControllerIv.setImageResource(R.mipmap.default_service_video_suspend);
-                        playerView.start();
-                        TimeUIHandler.sendEmptyMessage(UPDATE_UI);
-
-                        mCenterPlayerBtnIv.setVisibility(GONE);
-
-                    }
-                }
+                playController();
             }
         });
 
         mCenterPlayerBtnIv.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPlayControllerIv.setImageResource(R.mipmap.default_service_video_suspend);
-                playerView.start();
-                TimeUIHandler.sendEmptyMessage(UPDATE_UI);
-
-                mCenterPlayerBtnIv.setVisibility(GONE);
+                start();
             }
         });
 
@@ -237,6 +236,19 @@ public class VideoPlayerView extends LinearLayout {
             }
         });
 
+    }
+
+    /**
+     * 播放控制方法
+     */
+    private void playController() {
+        if (playerView != null) {
+            if (playerView.isPlaying()) {
+                pause();
+            } else {
+                start();
+            }
+        }
     }
 
 
@@ -476,34 +488,19 @@ public class VideoPlayerView extends LinearLayout {
 
     /////////////////生命周期方法///////////////////
     public void onResume() {
-        if (playerView != null) {
-            playerView.start();
-            TimeUIHandler.sendEmptyMessage(UPDATE_UI);
-        }
+        start();
     }
 
     public void onPause() {
-        if (playerView != null) {
-            playerView.pause();
-            TimeUIHandler.removeMessages(UPDATE_UI);
-        }
+        pause();
     }
 
     public void onDestroy() {
-        if (playerView != null) {
-            playerView.stopPlayback();
-        }
+        stop();
     }
 
-    public void repeatPlay() {
-        if (playerView != null) {
-            playerView.setVideoPath(videoPath);
-            playerView.start();
-            TimeUIHandler.sendEmptyMessage(UPDATE_UI);
-        }
-    }
-    /////////////////////////
 
+    ////////////对外暴露的方法/////////////
 
     /**
      * 开始播放
@@ -543,6 +540,16 @@ public class VideoPlayerView extends LinearLayout {
         if (playerView != null) {
             playerView.stopPlayback();
             TimeUIHandler.removeMessages(UPDATE_UI);
+        }
+    }
+
+    /**
+     * 循环播放
+     */
+    public void repeatPlay() {
+        if (playerView != null) {
+            playerView.setVideoPath(videoPath);
+            start();
         }
     }
 
@@ -590,6 +597,17 @@ public class VideoPlayerView extends LinearLayout {
      */
     public VideoPlayerView setSoundOpen() {
         playerView.setVolume(0.0f, 1f);
+        return this;
+    }
+
+    /**
+     * 设置音量大小
+     *
+     * @param sound 0.0---1.0
+     * @return
+     */
+    public VideoPlayerView setSound(float sound) {
+        playerView.setVolume(0.0f, sound);
         return this;
     }
 
@@ -654,17 +672,28 @@ public class VideoPlayerView extends LinearLayout {
         return this;
     }
 
-
     /**
-     * 设置音量大小
+     * 是否允许点击屏幕暂停播放
      *
-     * @param sound 0.0---1.0
+     * @param isTouchForPause
      * @return
      */
-    public VideoPlayerView setSound(float sound) {
-        playerView.setVolume(0.0f, sound);
+    public VideoPlayerView isTouchForPause(boolean isTouchForPause) {
+        this.isTouchForPause = isTouchForPause;
         return this;
     }
+
+    /**
+     * 是否允许循环播放
+     *
+     * @param repeatPlay
+     * @return
+     */
+    public VideoPlayerView isRepeatPlay(boolean repeatPlay) {
+        this.repeatPlay = repeatPlay;
+        return this;
+    }
+
 
     /**
      * 是否正在播放

@@ -10,6 +10,13 @@
         android:layout_height="match_parent"
         android:layout_gravity="center" />
 
+    <FrameLayout
+        android:id="@+id/touch_for_pause_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="40dp"
+        android:background="@color/playerView_bottom_bg_transparent" />
+
     <LinearLayout
         android:id="@+id/player_view_bottom_bar_layout_ll"
         android:layout_width="match_parent"

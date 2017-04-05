@@ -44,7 +44,7 @@ public class VideoFileUtils {
      */
     public static boolean checkFileExists(String filePath) {
         File file = new File(filePath);
-        Log.i("playerView", "file = " + file.getAbsolutePath());
+        Log.i("playerView", "checkFileExists      file = " + file.getAbsolutePath());
         return file.exists() && file.isFile();
     }
 
@@ -55,17 +55,12 @@ public class VideoFileUtils {
      * @param context        上下文对象
      * @param rawResId       R.raw.yourVideo
      * @param fileSuffix     例如  .mp4
-     * @param fileCopyToPath 自己要放置的文件路径   video/
      * @return 返回filePath
      */
-    public static String getCopyRawResToSdcardPath(Context context, int rawResId, String fileSuffix, String fileCopyToPath) {
+    public static String getCopyRawResToSdcardPath(Context context, int rawResId, String fileSuffix) {
         String filePath = null;
 
-        if (TextUtils.isEmpty(fileCopyToPath)) {
-            filePath = getRootDir(context) + "/PlayerVideo" + rawResId + fileSuffix;
-        } else {
-            filePath = getRootDir(context) + "/" + fileCopyToPath + rawResId + fileSuffix;
-        }
+        filePath = getRootDir(context) + "/" + rawResId + fileSuffix;
 
         if (checkFileExists(filePath)) {
             Log.i("playerView", "fileExists");
