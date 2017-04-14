@@ -34,7 +34,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerView.setOnFullScreenClickListener(this);
 
         if (isPlayLocalVideo) {
-            String localVideoPath = VideoFileUtils.getCopyRawResToSdcardPath(this, R.raw.local_video, mVideoSuffix);
+            String localVideoPath = VideoFileUtils.getCopyRawResToSdcardPath(this, R.raw.loginvideo, mVideoSuffix);
             playerView.setPlayerPath(localVideoPath).start();
         } else {
             String uriPath = cacheVideo();

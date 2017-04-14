@@ -29,4 +29,5 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
     compile 'com.danikula:videocache:2.6.4'
+    compile 'com.github.lygttpod:SuperTextView:1.1.1'
 }
