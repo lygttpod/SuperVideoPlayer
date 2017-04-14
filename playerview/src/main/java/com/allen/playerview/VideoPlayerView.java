@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -72,6 +73,11 @@ public class VideoPlayerView extends LinearLayout {
     private boolean isTouchForPause = true;
 
     /**
+     * 是否显示中间视频播放按钮
+     */
+    private boolean isShowCenterPlayerBtn = true;
+
+    /**
      * 封面图片
      */
     private Drawable coverViewDrawable = null;
@@ -101,6 +107,17 @@ public class VideoPlayerView extends LinearLayout {
     public static final int PAVED_PARENT = 2;
     public static final int IS_16_9 = 3;
     public static final int FIS_4_3 = 4;
+
+
+    /**
+     * 视频播放完毕回调
+     */
+    public OnVideoCompletionListener mOnVideoCompletionListener;
+
+    /**
+     * 进度变化回调
+     */
+    public OnCurrentProgressChange mOnCurrentProgressChange;
 
 
     public VideoPlayerView(Context context) {
@@ -169,8 +186,10 @@ public class VideoPlayerView extends LinearLayout {
         mTouchForPauseView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isTouchForPause) {
-                    playController();
+                if (isShowCenterPlayerBtn) {
+                    if (isTouchForPause) {
+                        playController();
+                    }
                 }
             }
         });
@@ -228,6 +247,7 @@ public class VideoPlayerView extends LinearLayout {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
                 playerView.seekTo(progress);
+
                 if (mCenterPlayerBtnIv.getVisibility() == GONE) {
                     playerView.start();
                     TimeUIHandler.sendEmptyMessage(UPDATE_UI);
@@ -287,7 +307,7 @@ public class VideoPlayerView extends LinearLayout {
         playerView.setDisplayAspectRatio(aspectRatio);
 
         //支持画面的镜像变换
-        playerView.setMirror(true);
+        playerView.setMirror(false);
 
         //是否重复播放
         if (repeatPlay) {
@@ -361,13 +381,25 @@ public class VideoPlayerView extends LinearLayout {
     private PLMediaPlayer.OnCompletionListener mOnCompletionListener = new PLMediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(PLMediaPlayer plMediaPlayer) {
+            if (mOnCurrentProgressChange != null) {
+                mOnCurrentProgressChange.onCurrentProgressChange(100, getTotalTime());
+            }
             if (repeatPlay) {
                 repeatPlay();
             } else {
+
                 mPlayControllerIv.setImageResource(R.mipmap.default_service_video_play_xiao);
-                mCenterPlayerBtnIv.setVisibility(VISIBLE);
+                if (isShowCenterPlayerBtn) {
+                    mCenterPlayerBtnIv.setVisibility(VISIBLE);
+                }
                 TimeUIHandler.removeMessages(UPDATE_UI);
+
+                if (mOnVideoCompletionListener != null) {
+                    mOnVideoCompletionListener.doOnVideoCompletionListener();
+                }
             }
+
+
         }
     };
 
@@ -433,6 +465,16 @@ public class VideoPlayerView extends LinearLayout {
      */
     private void updateTextViewWithTimeFormat(TextView textView, int millisecond) {
 
+        textView.setText(getFormatTime(millisecond));
+    }
+
+    /**
+     * 格式化时间
+     *
+     * @param millisecond
+     * @return
+     */
+    private String getFormatTime(int millisecond) {
         int second = millisecond / 1000;
         int hh = second / 3600;
         int mm = second % 3600 / 60;
@@ -444,9 +486,9 @@ public class VideoPlayerView extends LinearLayout {
         } else {
             str = String.format("%02d:%02d", mm, ss);
         }
-        textView.setText(str);
-    }
 
+        return str;
+    }
 
     /**
      * 更新时间及播放进度UI
@@ -468,6 +510,11 @@ public class VideoPlayerView extends LinearLayout {
                 //设置进度参数
                 mSeekBar.setMax(totalDuration);
                 mSeekBar.setProgress(currentPosition);
+
+                if (mOnCurrentProgressChange != null) {
+//                    Log.e("onCurrentProgressChange", getCurrentProgress() + "");
+                    mOnCurrentProgressChange.onCurrentProgressChange(getCurrentProgress(), getFormatTime(currentPosition));
+                }
 
                 //调取自己实现自动刷新
                 TimeUIHandler.sendEmptyMessageDelayed(UPDATE_UI, 100);
@@ -492,7 +539,12 @@ public class VideoPlayerView extends LinearLayout {
     }
 
     public void onPause() {
-        pause();
+        //这里不直接使用pause方法是为了解决欢迎页退出的时候不显示暂停播放的图标
+        if (playerView != null) {
+            playerView.pause();
+            TimeUIHandler.removeMessages(UPDATE_UI);
+            mPlayControllerIv.setImageResource(R.mipmap.default_service_video_play_xiao);
+        }
     }
 
     public void onDestroy() {
@@ -512,7 +564,10 @@ public class VideoPlayerView extends LinearLayout {
             playerView.start();
             TimeUIHandler.sendEmptyMessage(UPDATE_UI);
             mPlayControllerIv.setImageResource(R.mipmap.default_service_video_suspend);
-            mCenterPlayerBtnIv.setVisibility(GONE);
+
+            if (isShowCenterPlayerBtn) {
+                mCenterPlayerBtnIv.setVisibility(GONE);
+            }
         }
 
         return this;
@@ -528,7 +583,9 @@ public class VideoPlayerView extends LinearLayout {
             playerView.pause();
             TimeUIHandler.removeMessages(UPDATE_UI);
             mPlayControllerIv.setImageResource(R.mipmap.default_service_video_play_xiao);
-            mCenterPlayerBtnIv.setVisibility(VISIBLE);
+            if (isShowCenterPlayerBtn) {
+                mCenterPlayerBtnIv.setVisibility(VISIBLE);
+            }
         }
         return this;
     }
@@ -694,6 +751,20 @@ public class VideoPlayerView extends LinearLayout {
         return this;
     }
 
+    /**
+     * 是否显示中间播放按钮   默认显示  不显示的就屏蔽触摸屏幕暂停
+     *
+     * @param isShowCenterPlayerBtn
+     * @return
+     */
+    public VideoPlayerView isShowCenterPlayerBtn(boolean isShowCenterPlayerBtn) {
+        this.isShowCenterPlayerBtn = isShowCenterPlayerBtn;
+        if (!isShowCenterPlayerBtn) {
+            mCenterPlayerBtnIv.setVisibility(GONE);
+        }
+        return this;
+    }
+
 
     /**
      * 是否正在播放
@@ -725,6 +796,19 @@ public class VideoPlayerView extends LinearLayout {
     }
 
     /**
+     * 获取播放总时间
+     *
+     * @return
+     */
+    public String getTotalTime() {
+        int duration = 0;
+        if (playerView != null) {
+            duration = (int) playerView.getDuration();
+        }
+        return getFormatTime(duration);
+    }
+
+    /**
      * 开启全屏按钮点击事件监听
      *
      * @param activity
@@ -733,6 +817,25 @@ public class VideoPlayerView extends LinearLayout {
     public VideoPlayerView setOnFullScreenClickListener(Activity activity) {
         mActivity = activity;
         return this;
+    }
+
+    public VideoPlayerView setOnCurrentProgressChange(OnCurrentProgressChange mOnCurrentProgressChange) {
+        this.mOnCurrentProgressChange = mOnCurrentProgressChange;
+        return this;
+    }
+
+    public VideoPlayerView setOnVideoCompletionListener(OnVideoCompletionListener mOnVideoCompletionListener) {
+        this.mOnVideoCompletionListener = mOnVideoCompletionListener;
+        return this;
+    }
+
+    public interface OnVideoCompletionListener {
+        void doOnVideoCompletionListener();
+    }
+
+    public interface OnCurrentProgressChange {
+        void onCurrentProgressChange(int currentProgress, String currentTime);
+
     }
 
 }
